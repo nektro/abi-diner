@@ -33,6 +33,8 @@ pub fn build(b: *std.Build) void {
     };
 
     const seed: u64 = @bitCast(std.time.microTimestamp());
+    std.log.warn("seed: {d}", .{seed});
+    // 1747392854175661 crashes f32 @ 2144301497
 
     for (toolchains) |caller_toolchain| {
         for (std.enums.values(std.builtin.OptimizeMode)[0..1]) |caller_mode| {
