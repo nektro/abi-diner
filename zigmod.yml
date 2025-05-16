@@ -1,0 +1,5 @@
+id: h7kdrhw1bdu6x88kcch5qb3lult2bt0xdsmzebk62yb1629c
+name: abi-cafe
+license: MPL-2.0
+description: Verify the ABI of pairs of compilers
+root_dependencies:
