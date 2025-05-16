@@ -1,7 +1,7 @@
-# abi-cafe
+# abi-diner
 
-![loc](https://sloc.xyz/github/nektro/abi-cafe)
-[![license](https://img.shields.io/github/license/nektro/abi-cafe.svg)](https://github.com/nektro/abi-cafe/blob/master/LICENSE)
+![loc](https://sloc.xyz/github/nektro/abi-diner)
+[![license](https://img.shields.io/github/license/nektro/abi-diner.svg)](https://github.com/nektro/abi-diner/blob/master/LICENSE)
 
 Verify the ABI of pairs of compilers.
 
