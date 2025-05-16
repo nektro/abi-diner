@@ -5,20 +5,13 @@ const Tag = shared.Tag;
 pub fn build(b: *std.Build) void {
     const target = b.graph.host;
 
-    const toolchain_zig: [2]*std.Build.Step.Compile = .{
-        b.addExecutable(.{
-            .name = "gen_zig_caller",
-            .root_source_file = b.path("./gen_zig_caller.zig"),
-            .target = target,
-        }),
-        b.addExecutable(.{
-            .name = "gen_zig_callee",
-            .root_source_file = b.path("./gen_zig_callee.zig"),
-            .target = target,
-        }),
-    };
+    const toolchain_zig = b.addExecutable(.{
+        .name = "gen_zig",
+        .root_source_file = b.path("./zig.zig"),
+        .target = target,
+    });
 
-    const toolchains: []const [2]*std.Build.Step.Compile = &.{
+    const toolchains: []const *std.Build.Step.Compile = &.{
         toolchain_zig,
     };
 
@@ -36,7 +29,8 @@ pub fn build(b: *std.Build) void {
                         });
 
                         {
-                            const run_gen_caller = b.addRunArtifact(caller_toolchain[0]);
+                            const run_gen_caller = b.addRunArtifact(caller_toolchain);
+                            run_gen_caller.addArg("caller");
                             run_gen_caller.addArg(b.fmt("{d}", .{seed}));
                             run_gen_caller.addArg(b.fmt("{d}", .{@intFromEnum(i)}));
 
@@ -50,7 +44,8 @@ pub fn build(b: *std.Build) void {
                         }
 
                         {
-                            const run_gen_callee = b.addRunArtifact(callee_toolchain[1]);
+                            const run_gen_callee = b.addRunArtifact(callee_toolchain);
+                            run_gen_callee.addArg("callee");
                             run_gen_callee.addArg(b.fmt("{d}", .{seed}));
                             run_gen_callee.addArg(b.fmt("{d}", .{@intFromEnum(i)}));
 
