@@ -5,13 +5,16 @@ const Tag = shared.Tag;
 pub fn build(b: *std.Build) void {
     const target = b.graph.host;
 
-    const toolchain_zig = b.addExecutable(.{
-        .name = "gen_zig",
-        .root_source_file = b.path("./zig.zig"),
-        .target = target,
-    });
+    const toolchain_zig: Toolchain = .{
+        .gen = b.addExecutable(.{
+            .name = "gen_zig",
+            .root_source_file = b.path("./zig.zig"),
+            .target = target,
+        }),
+        .basename = "stdout.zig",
+    };
 
-    const toolchains: []const *std.Build.Step.Compile = &.{
+    const toolchains: []const Toolchain = &.{
         toolchain_zig,
     };
 
@@ -29,7 +32,7 @@ pub fn build(b: *std.Build) void {
                         });
 
                         {
-                            const run_gen_caller = b.addRunArtifact(caller_toolchain);
+                            const run_gen_caller = b.addRunArtifact(caller_toolchain.gen);
                             run_gen_caller.addArg("caller");
                             run_gen_caller.addArg(b.fmt("{d}", .{seed}));
                             run_gen_caller.addArg(b.fmt("{d}", .{@intFromEnum(i)}));
@@ -40,11 +43,12 @@ pub fn build(b: *std.Build) void {
                                 .target = target,
                                 .optimize = caller_mode,
                             });
+                            run_gen_caller.captured_stdout.?.basename = caller_toolchain.basename;
                             exe.addObject(obj);
                         }
 
                         {
-                            const run_gen_callee = b.addRunArtifact(callee_toolchain);
+                            const run_gen_callee = b.addRunArtifact(callee_toolchain.gen);
                             run_gen_callee.addArg("callee");
                             run_gen_callee.addArg(b.fmt("{d}", .{seed}));
                             run_gen_callee.addArg(b.fmt("{d}", .{@intFromEnum(i)}));
@@ -55,6 +59,7 @@ pub fn build(b: *std.Build) void {
                                 .target = target,
                                 .optimize = callee_mode,
                             });
+                            run_gen_callee.captured_stdout.?.basename = callee_toolchain.basename;
                             exe.addObject(obj);
                         }
 
@@ -67,3 +72,8 @@ pub fn build(b: *std.Build) void {
         }
     }
 }
+
+const Toolchain = struct {
+    gen: *std.Build.Step.Compile,
+    basename: []const u8,
+};
