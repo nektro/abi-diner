@@ -6,6 +6,7 @@ pub fn build(b: *std.Build) void {
     const target = b.graph.host;
 
     const toolchain_zig: Toolchain = .{
+        .lang = .zig,
         .gen = b.addExecutable(.{
             .name = "gen_zig",
             .root_source_file = b.path("./zig.zig"),
@@ -13,6 +14,7 @@ pub fn build(b: *std.Build) void {
         }),
         .basename = "stdout.zig",
     };
+    _ = &toolchain_zig;
 
     const toolchains: []const Toolchain = &.{
         toolchain_zig,
@@ -37,14 +39,7 @@ pub fn build(b: *std.Build) void {
                             run_gen_caller.addArg(b.fmt("{d}", .{seed}));
                             run_gen_caller.addArg(b.fmt("{d}", .{@intFromEnum(i)}));
 
-                            const obj = b.addObject(.{
-                                .name = "caller",
-                                .root_source_file = run_gen_caller.captureStdOut(),
-                                .target = target,
-                                .optimize = caller_mode,
-                            });
-                            run_gen_caller.captured_stdout.?.basename = caller_toolchain.basename;
-                            exe.addObject(obj);
+                            exe.addObject(objFrom(caller_toolchain, b, "caller", run_gen_caller, target, caller_mode));
                         }
 
                         {
@@ -53,14 +48,7 @@ pub fn build(b: *std.Build) void {
                             run_gen_callee.addArg(b.fmt("{d}", .{seed}));
                             run_gen_callee.addArg(b.fmt("{d}", .{@intFromEnum(i)}));
 
-                            const obj = b.addObject(.{
-                                .name = "callee",
-                                .root_source_file = run_gen_callee.captureStdOut(),
-                                .target = target,
-                                .optimize = callee_mode,
-                            });
-                            run_gen_callee.captured_stdout.?.basename = callee_toolchain.basename;
-                            exe.addObject(obj);
+                            exe.addObject(objFrom(callee_toolchain, b, "callee", run_gen_callee, target, callee_mode));
                         }
 
                         const run = b.addRunArtifact(exe);
@@ -74,6 +62,26 @@ pub fn build(b: *std.Build) void {
 }
 
 const Toolchain = struct {
+    lang: Lang,
     gen: *std.Build.Step.Compile,
     basename: []const u8,
+
+    const Lang = enum {
+        zig,
+    };
 };
+
+fn objFrom(toolchain: Toolchain, b: *std.Build, name: []const u8, run_gen: *std.Build.Step.Run, target: std.Build.ResolvedTarget, mode: std.builtin.OptimizeMode) *std.Build.Step.Compile {
+    switch (toolchain.lang) {
+        .zig => {
+            const obj = b.addObject(.{
+                .name = name,
+                .root_source_file = run_gen.captureStdOut(),
+                .target = target,
+                .optimize = mode,
+            });
+            run_gen.captured_stdout.?.basename = toolchain.basename;
+            return obj;
+        },
+    }
+}
