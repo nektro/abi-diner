@@ -23,9 +23,11 @@ pub fn main() !void {
             try renderType(tag, writer);
             try writer.writeAll(") void;\n\n");
             try writer.writeAll("export fn do_caller() void {\n");
-            try writer.writeAll("    do_test(");
+            try writer.writeAll("    do_test(@as(");
+            try renderType(tag, writer);
+            try writer.writeAll(", ");
             try renderCast(tag, writer, random);
-            try writer.writeAll(");\n");
+            try writer.writeAll("));\n");
             try writer.writeAll("}\n");
         },
 
@@ -44,12 +46,11 @@ pub fn main() !void {
             try writer.writeAll("a0: ");
             try renderType(tag, writer);
             try writer.writeAll(") void {\n");
-            try writer.writeAll("    const f0: ");
+            try writer.writeAll("    std.debug.assert(a0 == @as(");
             try renderType(tag, writer);
-            try writer.writeAll(" = ");
+            try writer.writeAll(", ");
             try renderCast(tag, writer, random);
-            try writer.writeAll(";\n");
-            try writer.writeAll("    std.debug.assert(a0 == f0);\n");
+            try writer.writeAll("));\n");
             try writer.writeAll("}\n");
         },
     }
