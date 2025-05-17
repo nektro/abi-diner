@@ -62,7 +62,7 @@ pub fn build(b: *std.Build) void {
                             run_gen_caller.addArg(b.fmt("{d}", .{seed}));
                             run_gen_caller.addArg(b.fmt("{d}", .{@intFromEnum(i)}));
 
-                            exe.addObject(objFrom(caller_toolchain, b, "caller", run_gen_caller, target, caller_mode));
+                            addObject(exe, caller_toolchain, b, "caller", run_gen_caller, target, caller_mode);
                         }
 
                         {
@@ -71,7 +71,7 @@ pub fn build(b: *std.Build) void {
                             run_gen_callee.addArg(b.fmt("{d}", .{seed}));
                             run_gen_callee.addArg(b.fmt("{d}", .{@intFromEnum(i)}));
 
-                            exe.addObject(objFrom(callee_toolchain, b, "callee", run_gen_callee, target, callee_mode));
+                            addObject(exe, callee_toolchain, b, "callee", run_gen_callee, target, callee_mode);
                         }
 
                         const run = b.addRunArtifact(exe);
@@ -95,7 +95,7 @@ const Toolchain = struct {
     };
 };
 
-fn objFrom(toolchain: Toolchain, b: *std.Build, name: []const u8, run_gen: *std.Build.Step.Run, target: std.Build.ResolvedTarget, mode: std.builtin.OptimizeMode) *std.Build.Step.Compile {
+fn addObject(exe: *std.Build.Step.Compile, toolchain: Toolchain, b: *std.Build, name: []const u8, run_gen: *std.Build.Step.Run, target: std.Build.ResolvedTarget, mode: std.builtin.OptimizeMode) void {
     switch (toolchain.lang) {
         .zig => {
             const obj = b.addObject(.{
@@ -105,7 +105,7 @@ fn objFrom(toolchain: Toolchain, b: *std.Build, name: []const u8, run_gen: *std.
                 .optimize = mode,
             });
             run_gen.captured_stdout.?.basename = toolchain.basename;
-            return obj;
+            exe.addObject(obj);
         },
         .c => {
             const obj = b.addObject(.{
@@ -117,7 +117,7 @@ fn objFrom(toolchain: Toolchain, b: *std.Build, name: []const u8, run_gen: *std.
             obj.addCSourceFile(.{ .file = run_gen.captureStdOut() });
             obj.linkLibC();
             run_gen.captured_stdout.?.basename = toolchain.basename;
-            return obj;
+            exe.addObject(obj);
         },
     }
 }
