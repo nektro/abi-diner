@@ -67,7 +67,7 @@ pub fn build(b: *std.Build) void {
                         if ((is_c and is_cpp) and (i == .u128 or i == .i128)) continue;
 
                         const exe = b.addExecutable(.{
-                            .name = "test",
+                            .name = b.fmt("test__{s}_{s}__{s}_{s}", .{ @tagName(caller_toolchain.lang), @tagName(caller_mode), @tagName(callee_toolchain.lang), @tagName(callee_mode) }),
                             .root_source_file = b.path("./root.zig"),
                             .target = target,
                         });
