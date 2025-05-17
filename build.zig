@@ -35,6 +35,7 @@ pub fn build(b: *std.Build) void {
 
     std.log.warn("seed: {d}", .{seed});
     // 1747392854175661 crashes f32 @ 2144301497
+    // 1747435010791578 crashes f16 @ 64776 (NaN)
 
     for (toolchains) |caller_toolchain| {
         for (std.enums.values(std.builtin.OptimizeMode)[0..1]) |caller_mode| {
