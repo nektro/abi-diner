@@ -93,7 +93,7 @@ pub fn renderType(self: Tag, writer: std.fs.File.Writer) !void {
         .u32 => "uint32_t",
         .u64 => "uint64_t",
         .u128 => "uint128_t",
-        .f16 => @panic("not stable"),
+        .f16 => "_Float16",
         .f32 => "float",
         .f64 => "double",
         .f128 => @panic("not stable"),
