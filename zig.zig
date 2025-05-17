@@ -21,7 +21,7 @@ pub fn main() !void {
 
             try writer.writeAll("extern fn do_test(a0: ");
             try renderType(tag, writer);
-            try writer.writeAll(") void;\n\n");
+            try writer.writeAll(") void;\n");
             try writer.writeAll("export fn do_caller() void {\n");
             try writer.writeAll("    do_test(@as(");
             try renderType(tag, writer);
