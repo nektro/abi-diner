@@ -4,6 +4,7 @@ const Tag = shared.Tag;
 
 pub fn build(b: *std.Build) void {
     const target = b.graph.host;
+    const seed = b.option(u64, "seed", "") orelse std.crypto.random.int(u64);
 
     const toolchain_zig: Toolchain = .{
         .lang = .zig,
@@ -32,7 +33,6 @@ pub fn build(b: *std.Build) void {
         toolchain_c,
     };
 
-    const seed: u64 = std.crypto.random.int(u64);
     std.log.warn("seed: {d}", .{seed});
     // 1747392854175661 crashes f32 @ 2144301497
 
