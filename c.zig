@@ -58,11 +58,11 @@ pub fn main() !void {
             try writer.writeAll("#include <math.h>\n");
             try writer.writeAll("#include <stdbool.h>\n");
             try writer.writeAll("#include <stddef.h>\n");
-            try writer.writeAll("#include <assert.h>\n");
             try writer.writeAll("\n");
             try writer.writeAll("typedef __int128 int128_t;\n");
             try writer.writeAll("typedef unsigned __int128 uint128_t;\n");
             try writer.writeAll("\n");
+            try writer.writeAll("extern void do_panic(void);\n");
             try writer.writeAll("void do_test(");
             try renderType(tag, writer);
             try writer.writeAll(" a0) {\n");
@@ -73,9 +73,9 @@ pub fn main() !void {
             try writer.writeAll(")");
             try renderValue(tag, writer, random);
             try writer.writeAll(";\n");
-            try writer.writeAll("    assert(a0 == *(");
+            try writer.writeAll("    if (a0 != *(");
             try renderType(tag, writer);
-            try writer.writeAll("*)&v0);\n");
+            try writer.writeAll("*)&v0) do_panic();\n");
             try writer.writeAll("}\n");
         },
     }

@@ -41,16 +41,16 @@ pub fn main() !void {
             const stdout = std.io.getStdOut();
             const writer = stdout.writer();
 
-            try writer.writeAll("const std = @import(\"std\");\n\n");
+            try writer.writeAll("extern fn do_panic() void;\n");
             try writer.writeAll("export fn do_test(");
             try writer.writeAll("a0: ");
             try renderType(tag, writer);
             try writer.writeAll(") void {\n");
-            try writer.writeAll("    std.debug.assert(a0 == @as(");
+            try writer.writeAll("    if (a0 != @as(");
             try renderType(tag, writer);
             try writer.writeAll(", ");
             try renderCast(tag, writer, random);
-            try writer.writeAll("));\n");
+            try writer.writeAll(")) do_panic();\n");
             try writer.writeAll("}\n");
         },
     }

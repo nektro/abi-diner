@@ -121,6 +121,7 @@ fn addObject(exe: *std.Build.Step.Compile, toolchain: Toolchain, b: *std.Build, 
                 .target = target,
                 .optimize = mode,
             });
+            obj.linkLibC();
             run_gen.captured_stdout.?.basename = toolchain.basename;
             exe.addObject(obj);
         },

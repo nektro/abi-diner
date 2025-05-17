@@ -53,10 +53,10 @@ pub fn main() !void {
 
             try writer.writeAll("#include <cstdint>\n");
             try writer.writeAll("#include <cstddef>\n");
-            try writer.writeAll("#include <cassert>\n");
             try writer.writeAll("\n");
             try writer.writeAll("#include \"cpp.h\"\n");
             try writer.writeAll("\n");
+            try writer.writeAll("extern \"C\" void do_panic();\n");
             try writer.writeAll("extern \"C\" void do_test(");
             try renderType(tag, writer);
             try writer.writeAll(" a0) {\n");
@@ -67,9 +67,9 @@ pub fn main() !void {
             try writer.writeAll(")");
             try renderValue(tag, writer, random);
             try writer.writeAll(";\n");
-            try writer.writeAll("    assert(a0 == *(");
+            try writer.writeAll("    if (a0 != *(");
             try renderType(tag, writer);
-            try writer.writeAll("*)&v0);\n");
+            try writer.writeAll("*)&v0) do_panic();\n");
             try writer.writeAll("}\n");
         },
     }
