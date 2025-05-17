@@ -46,7 +46,8 @@ pub fn build(b: *std.Build) void {
                         const is_c = caller_toolchain.lang == .c or callee_toolchain.lang == .c;
                         _ = &is_c;
 
-                        if (is_c and (i == .f16 or i == .f128)) continue;
+                        if (is_c and i == .f16) continue;
+                        if (is_c and i == .f128) continue;
                         if ((is_c and is_zig) and (i == .u128 or i == .i128)) continue;
 
                         const exe = b.addExecutable(.{
