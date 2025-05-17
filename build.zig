@@ -28,9 +28,21 @@ pub fn build(b: *std.Build) void {
     };
     _ = &toolchain_c;
 
+    const toolchain_cpp: Toolchain = .{
+        .lang = .cpp,
+        .gen = b.addExecutable(.{
+            .name = "gen_cpp",
+            .root_source_file = b.path("./cpp.zig"),
+            .target = target,
+        }),
+        .basename = "stdout.cpp",
+    };
+    _ = &toolchain_cpp;
+
     const toolchains: []const Toolchain = &.{
         toolchain_zig,
         toolchain_c,
+        toolchain_cpp,
     };
 
     std.log.warn("seed: {d}", .{seed});
@@ -46,9 +58,13 @@ pub fn build(b: *std.Build) void {
                         _ = &is_zig;
                         const is_c = caller_toolchain.lang == .c or callee_toolchain.lang == .c;
                         _ = &is_c;
+                        const is_cpp = caller_toolchain.lang == .cpp or callee_toolchain.lang == .cpp;
+                        _ = &is_cpp;
 
                         if (is_c and i == .f128) continue;
+                        if (is_cpp and i == .f128) continue;
                         if ((is_c and is_zig) and (i == .u128 or i == .i128)) continue;
+                        if ((is_c and is_cpp) and (i == .u128 or i == .i128)) continue;
 
                         const exe = b.addExecutable(.{
                             .name = "test",
@@ -92,6 +108,7 @@ const Toolchain = struct {
     const Lang = enum {
         zig,
         c,
+        cpp,
     };
 };
 
@@ -116,6 +133,19 @@ fn addObject(exe: *std.Build.Step.Compile, toolchain: Toolchain, b: *std.Build, 
             });
             obj.addCSourceFile(.{ .file = run_gen.captureStdOut() });
             obj.linkLibC();
+            run_gen.captured_stdout.?.basename = toolchain.basename;
+            exe.addObject(obj);
+        },
+        .cpp => {
+            const obj = b.addObject(.{
+                .name = name,
+                .root_source_file = null,
+                .target = target,
+                .optimize = mode,
+            });
+            obj.addCSourceFile(.{ .file = run_gen.captureStdOut() });
+            obj.addIncludePath(b.path("./include"));
+            obj.linkLibCpp();
             run_gen.captured_stdout.?.basename = toolchain.basename;
             exe.addObject(obj);
         },
