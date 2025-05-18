@@ -80,10 +80,9 @@ pub fn build(b: *std.Build) void {
                         if (is_cpp and i == .f128) continue;
                         if (is_rust and i == .f16) continue; // nightly only
                         if (is_rust and i == .f128) continue; // nightly only
-                        if (is_rust and i == .u128) continue; // warning: `extern` block uses type `u128`, which is not FFI-safe
-                        if (is_rust and i == .i128) continue; // warning: `extern` block uses type `i128`, which is not FFI-safe
                         if ((is_c and is_zig) and (i == .u128 or i == .i128)) continue;
                         if ((is_c and is_cpp) and (i == .u128 or i == .i128)) continue;
+                        if ((is_c and is_rust) and (i == .u128 or i == .i128)) continue;
 
                         const exe = b.addExecutable(.{
                             .name = b.fmt("test__{s}_{s}__{s}_{s}", .{ @tagName(caller_toolchain.lang), @tagName(caller_mode), @tagName(callee_toolchain.lang), @tagName(callee_mode) }),

@@ -20,6 +20,7 @@ pub fn main() !void {
             const writer = stdout.writer();
 
             try writer.writeAll("#![no_main]\n");
+            try writer.writeAll("#![allow(improper_ctypes)]\n");
             try writer.writeAll("\n");
             try writer.writeAll("extern \"C\" {\n");
             try writer.writeAll("    fn do_test(a0: ");
@@ -47,6 +48,7 @@ pub fn main() !void {
 
             try writer.writeAll("#![no_main]\n");
             try writer.writeAll("#![allow(unused_parens)]\n");
+            try writer.writeAll("#![allow(improper_ctypes_definitions)]\n");
             try writer.writeAll("\n");
             try writer.writeAll("extern \"C\" {\n");
             try writer.writeAll("    fn do_panic();\n");
