@@ -174,6 +174,12 @@ fn addObject(exe: *std.Build.Step.Compile, toolchain: Toolchain, b: *std.Build, 
             cmd.addArgs(&.{ "--emit", "obj" });
             cmd.addArg("-lc");
             cmd.addArg("-g");
+            switch (mode) {
+                .Debug => cmd.addArgs(&.{ "-C", "opt-level=0", "-C", "debug-assertions=y" }),
+                .ReleaseSafe => cmd.addArgs(&.{ "-C", "opt-level=3", "-C", "debug-assertions=y" }),
+                .ReleaseSmall => cmd.addArgs(&.{ "-C", "opt-level=s", "-C", "debug-assertions=n" }),
+                .ReleaseFast => cmd.addArgs(&.{ "-C", "opt-level=3", "-C", "debug-assertions=n" }),
+            }
             cmd.addArg("-o");
             const output = cmd.addOutputFileArg(name);
             cmd.addFileArg(run_gen.captureStdOut());
