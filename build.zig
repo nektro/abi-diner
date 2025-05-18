@@ -78,7 +78,7 @@ pub fn build(b: *std.Build) void {
                             run_gen_caller.addArg(b.fmt("{d}", .{seed}));
                             run_gen_caller.addArg(b.fmt("{d}", .{@intFromEnum(i)}));
 
-                            addObject(exe, caller_toolchain, b, "caller", run_gen_caller, target, caller_mode);
+                            addObject(exe, caller_toolchain, b, "caller.o", run_gen_caller, target, caller_mode);
                         }
 
                         {
@@ -87,7 +87,7 @@ pub fn build(b: *std.Build) void {
                             run_gen_callee.addArg(b.fmt("{d}", .{seed}));
                             run_gen_callee.addArg(b.fmt("{d}", .{@intFromEnum(i)}));
 
-                            addObject(exe, callee_toolchain, b, "callee", run_gen_callee, target, callee_mode);
+                            addObject(exe, callee_toolchain, b, "callee.o", run_gen_callee, target, callee_mode);
                         }
 
                         const run = b.addRunArtifact(exe);
