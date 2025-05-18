@@ -16,7 +16,6 @@ Inspired by https://github.com/Gankra/abi-cafe but leveraging the Zig Build Syst
 - [Zig](https://ziglang.org/)
 - [C](https://clang.llvm.org/)
 - [C++](https://clang.llvm.org/)
-- [Odin](https://odin-lang.org/)
 
 ## How It Works
 
