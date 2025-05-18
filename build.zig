@@ -4,7 +4,8 @@ const Tag = shared.Tag;
 
 pub fn build(b: *std.Build) void {
     const target = b.graph.host;
-    const seed = b.option(u64, "seed", "") orelse std.crypto.random.int(u64);
+    const random = b.option(bool, "random", "") orelse false;
+    const seed = if (random) std.crypto.random.int(u64) else b.option(u64, "seed", "") orelse 10335101430366274186;
 
     const toolchain_zig: Toolchain = .{
         .lang = .zig,
