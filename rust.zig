@@ -4,6 +4,7 @@ const Tag = shared.Tag;
 
 pub fn main() !void {
     var args = std.process.args();
+    defer std.debug.assert(args.next() == null);
 
     const argv0 = args.next().?;
     _ = argv0;
