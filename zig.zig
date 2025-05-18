@@ -27,11 +27,9 @@ pub fn main() !void {
             try renderType(tag, writer);
             try writer.writeAll(") void;\n");
             try writer.writeAll("export fn do_caller() void {\n");
-            try writer.writeAll("    do_test(@as(");
-            try renderType(tag, writer);
-            try writer.writeAll(", ");
-            try renderCast(tag, writer, random);
-            try writer.writeAll("));\n");
+            try writer.writeAll("    do_test(");
+            try renderValue(tag, writer, random);
+            try writer.writeAll(");\n");
             try writer.writeAll("}\n");
         },
 
@@ -46,11 +44,9 @@ pub fn main() !void {
             try writer.writeAll("a0: ");
             try renderType(tag, writer);
             try writer.writeAll(") void {\n");
-            try writer.writeAll("    if (a0 != @as(");
-            try renderType(tag, writer);
-            try writer.writeAll(", ");
-            try renderCast(tag, writer, random);
-            try writer.writeAll(")) do_panic();\n");
+            try writer.writeAll("    if (a0 != ");
+            try renderValue(tag, writer, random);
+            try writer.writeAll(") do_panic();\n");
             try writer.writeAll("}\n");
         },
     }
@@ -77,18 +73,23 @@ pub fn renderType(self: Tag, writer: std.fs.File.Writer) !void {
     });
 }
 
-pub fn renderCast(self: Tag, writer: std.fs.File.Writer, random: std.Random) !void {
+pub fn renderValue(self: Tag, writer: std.fs.File.Writer, random: std.Random) !void {
     switch (self) {
-        .u8, .i8 => try writer.print("@bitCast(@as(u8, {d}))", .{random.int(u8)}),
-        .u16, .i16 => try writer.print("@bitCast(@as(u16, {d}))", .{random.int(u16)}),
-        .u32, .i32 => try writer.print("@bitCast(@as(u32, {d}))", .{random.int(u32)}),
-        .u64, .i64 => try writer.print("@bitCast(@as(u64, {d}))", .{random.int(u64)}),
-        .u128, .i128 => try writer.print("@bitCast(@as(u128, {d}))", .{random.int(u128)}),
-        .f16 => try writer.print("@bitCast(@as(u16, {d}))", .{random.int(u16)}),
-        .f32 => try writer.print("@bitCast(@as(u32, {d}))", .{random.int(u32)}),
-        .f64 => try writer.print("@bitCast(@as(u64, {d}))", .{random.int(u64)}),
-        .f128 => try writer.print("@bitCast(@as(u128, {d}))", .{random.int(u128)}),
-        .bool => try writer.print("@bitCast(@as(u1, {d}))", .{random.int(u1)}),
-        .ptr => try writer.print("@ptrFromInt({d})", .{random.int(usize)}),
+        .i8 => try writer.print("@as(i8, @bitCast(@as(u8, {d})))", .{random.int(u8)}),
+        .i16 => try writer.print("@as(i16, @bitCast(@as(u16, {d})))", .{random.int(u16)}),
+        .i32 => try writer.print("@as(i32, @bitCast(@as(u32, {d})))", .{random.int(u32)}),
+        .i64 => try writer.print("@as(i64, @bitCast(@as(u64, {d})))", .{random.int(u64)}),
+        .i128 => try writer.print("@as(i128, @bitCast(@as(u128, {d})))", .{random.int(u128)}),
+        .u8 => try writer.print("@as(u8, @bitCast(@as(u8, {d})))", .{random.int(u8)}),
+        .u16 => try writer.print("@as(u16, @bitCast(@as(u16, {d})))", .{random.int(u16)}),
+        .u32 => try writer.print("@as(u32, @bitCast(@as(u32, {d})))", .{random.int(u32)}),
+        .u64 => try writer.print("@as(u64, @bitCast(@as(u64, {d})))", .{random.int(u64)}),
+        .u128 => try writer.print("@as(u128, @bitCast(@as(u128, {d})))", .{random.int(u128)}),
+        .f16 => try writer.print("@as(f16, @bitCast(@as(u16, {d})))", .{random.int(u16)}),
+        .f32 => try writer.print("@as(f32, @bitCast(@as(u32, {d})))", .{random.int(u32)}),
+        .f64 => try writer.print("@as(f64, @bitCast(@as(u64, {d})))", .{random.int(u64)}),
+        .f128 => try writer.print("@as(f128, @bitCast(@as(u128, {d})))", .{random.int(u128)}),
+        .bool => try writer.print("@as(bool, @bitCast(@as(u1, {d})))", .{random.int(u1)}),
+        .ptr => try writer.print("@as(*anyopaque, @ptrFromInt({d}))", .{random.int(usize)}),
     }
 }
