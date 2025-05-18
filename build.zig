@@ -92,6 +92,14 @@ pub fn build(b: *std.Build) void {
     // 1747392854175661 crashes f32 @ 2144301497
     // 1747435010791578 crashes f16 @ 64776 (NaN)
 
+    const main_obj = b.addObject(.{
+        .name = "main.o",
+        .root_source_file = b.path("./root.zig"),
+        .target = target,
+        .optimize = .ReleaseSafe,
+    });
+    main_obj.linkLibC();
+
     for (toolchains.slice()) |caller_toolchain| {
         for (modes.slice()) |caller_mode| {
             for (toolchains.slice()) |callee_toolchain| {
@@ -116,9 +124,10 @@ pub fn build(b: *std.Build) void {
 
                         const exe = b.addExecutable(.{
                             .name = b.fmt("test__{s}_{s}__{s}_{s}", .{ @tagName(caller_toolchain.lang), @tagName(caller_mode), @tagName(callee_toolchain.lang), @tagName(callee_mode) }),
-                            .root_source_file = b.path("./root.zig"),
+                            .root_source_file = null,
                             .target = target,
                         });
+                        exe.addObject(main_obj);
 
                         {
                             const run_gen_caller = b.addRunArtifact(caller_toolchain.gen);
