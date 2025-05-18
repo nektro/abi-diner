@@ -11,11 +11,13 @@ pub fn build(b: *std.Build) void {
     const cC = b.option(bool, "cC", "") orelse false;
     const cCpp = b.option(bool, "cCpp", "") orelse false;
     const cRust = b.option(bool, "cRust", "") orelse false;
+    const cAll = b.option(bool, "cAll", "") orelse false;
 
     const oDebug = b.option(bool, "oDebug", "") orelse false;
     const oReleaseSafe = b.option(bool, "oReleaseSafe", "") orelse false;
     const oReleaseFast = b.option(bool, "oReleaseFast", "") orelse false;
     const oReleaseSmall = b.option(bool, "oReleaseSmall", "") orelse false;
+    const oAll = b.option(bool, "oAll", "") orelse false;
 
     const toolchain_zig: Toolchain = .{
         .lang = .zig,
@@ -73,14 +75,16 @@ pub fn build(b: *std.Build) void {
     if (cC) toolchains.appendAssumeCapacity(toolchain_c);
     if (cCpp) toolchains.appendAssumeCapacity(toolchain_cpp);
     if (cRust) toolchains.appendAssumeCapacity(toolchain_rust);
-    if (toolchains.len == 0) toolchains.appendSliceAssumeCapacity(&toolchains_all);
+    if (cAll) toolchains.appendSliceAssumeCapacity(&toolchains_all);
+    if (toolchains.len == 0) toolchains.appendSliceAssumeCapacity(&.{ toolchain_zig, toolchain_c });
 
     var modes = std.BoundedArray(std.builtin.OptimizeMode, 4){};
     if (oDebug) modes.appendAssumeCapacity(.Debug);
     if (oReleaseSafe) modes.appendAssumeCapacity(.ReleaseSafe);
     if (oReleaseFast) modes.appendAssumeCapacity(.ReleaseFast);
     if (oReleaseSmall) modes.appendAssumeCapacity(.ReleaseSmall);
-    if (modes.len == 0) modes.appendSliceAssumeCapacity(std.enums.values(std.builtin.OptimizeMode));
+    if (oAll) modes.appendSliceAssumeCapacity(std.enums.values(std.builtin.OptimizeMode));
+    if (modes.len == 0) modes.appendSliceAssumeCapacity(&.{.Debug});
 
     std.log.warn("seed: {d}", .{seed});
     // 1747392854175661 crashes f32 @ 2144301497
