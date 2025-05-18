@@ -15,6 +15,9 @@ pub fn main() !void {
             var rand = std.Random.DefaultPrng.init(seed);
             const random = rand.random();
 
+            const count = try std.fmt.parseInt(u8, args.next().?, 10);
+            std.debug.assert(count == 1);
+
             const tag: Tag = @enumFromInt(try std.fmt.parseInt(u8, args.next().?, 10));
 
             const stdout = std.io.getStdOut();
@@ -41,6 +44,9 @@ pub fn main() !void {
             const seed = try std.fmt.parseInt(u64, args.next().?, 10);
             var rand = std.Random.DefaultPrng.init(seed);
             const random = rand.random();
+
+            const count = try std.fmt.parseInt(u8, args.next().?, 10);
+            std.debug.assert(count == 1);
 
             const tag: Tag = @enumFromInt(try std.fmt.parseInt(u8, args.next().?, 10));
 
