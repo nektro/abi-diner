@@ -2,6 +2,14 @@ const std = @import("std");
 const shared = @import("./shared.zig");
 const Tag = shared.Tag;
 
+pub fn StackLinkedListNode(comptime T: type) type {
+    return struct {
+        data: *const T,
+        next: ?*const @This() = null,
+    };
+}
+const ArgList = StackLinkedListNode(Tag);
+
 pub fn build(b: *std.Build) void {
     const target = b.graph.host;
     const random = b.option(bool, "random", "") orelse false;
@@ -154,6 +162,9 @@ pub fn build(b: *std.Build) void {
                         const run = b.addRunArtifact(exe);
 
                         b.default_step.dependOn(&run.step);
+
+                        var arg_list_head = ArgList{ .data = &i };
+                        genCombo(1, 2, b, target, seed, main_obj, caller_toolchain, caller_mode, callee_toolchain, callee_mode, &arg_list_head, &arg_list_head);
                     }
                 }
             }
@@ -174,6 +185,102 @@ const Toolchain = struct {
         rust,
     };
 };
+
+fn genCombo(
+    depth: u32,
+    max_depth: u32,
+    b: *std.Build,
+    target: std.Build.ResolvedTarget,
+    seed: u64,
+    main_obj: *std.Build.Step.Compile,
+    caller_toolchain: Toolchain,
+    caller_mode: std.builtin.OptimizeMode,
+    callee_toolchain: Toolchain,
+    callee_mode: std.builtin.OptimizeMode,
+    arg_list_head: *ArgList,
+    arg_list_tail: *ArgList,
+) void {
+    if (depth >= max_depth) return;
+
+    const is_zig = caller_toolchain.lang == .zig or callee_toolchain.lang == .zig;
+    _ = &is_zig;
+    const is_c = caller_toolchain.lang == .c or callee_toolchain.lang == .c;
+    _ = &is_c;
+    const is_cpp = caller_toolchain.lang == .cpp or callee_toolchain.lang == .cpp;
+    _ = &is_cpp;
+    const is_rust = caller_toolchain.lang == .rust or callee_toolchain.lang == .rust;
+    _ = &is_rust;
+
+    for (std.enums.values(Tag)) |i| {
+        if (!caller_toolchain.supportsTag(i)) continue;
+        if (!callee_toolchain.supportsTag(i)) continue;
+
+        if ((is_c and is_zig) and (i == .u128 or i == .i128)) continue;
+        if ((is_c and is_cpp) and (i == .u128 or i == .i128)) continue;
+        if ((is_c and is_rust) and (i == .u128 or i == .i128)) continue;
+
+        var arg_list_next = ArgList{ .data = &i };
+        arg_list_tail.next = &arg_list_next;
+        genTest(b, target, seed, main_obj, caller_toolchain, caller_mode, callee_toolchain, callee_mode, depth + 1, arg_list_head);
+
+        genCombo(depth + 1, max_depth, b, target, seed, main_obj, caller_toolchain, caller_mode, callee_toolchain, callee_mode, arg_list_head, &arg_list_next);
+    }
+}
+
+fn genTest(
+    b: *std.Build,
+    target: std.Build.ResolvedTarget,
+    seed: u64,
+    main_obj: *std.Build.Step.Compile,
+    caller_toolchain: Toolchain,
+    caller_mode: std.builtin.OptimizeMode,
+    callee_toolchain: Toolchain,
+    callee_mode: std.builtin.OptimizeMode,
+    depth: u32,
+    arg_list_head: *ArgList,
+) void {
+    const exe = b.addExecutable(.{
+        .name = b.fmt("test__{s}_{s}__{s}_{s}", .{ @tagName(caller_toolchain.lang), @tagName(caller_mode), @tagName(callee_toolchain.lang), @tagName(callee_mode) }),
+        .root_source_file = null,
+        .target = target,
+    });
+    exe.addObject(main_obj);
+
+    {
+        const run_gen_caller = b.addRunArtifact(caller_toolchain.gen);
+        run_gen_caller.addArg(b.fmt("{d}", .{seed}));
+        run_gen_caller.addArg(b.fmt("{d}", .{depth}));
+        run_gen_caller.addArg("caller");
+        addArgs(run_gen_caller, b, arg_list_head);
+
+        addObject(exe, caller_toolchain, b, "caller.o", run_gen_caller, target, caller_mode);
+    }
+
+    {
+        const run_gen_callee = b.addRunArtifact(callee_toolchain.gen);
+        run_gen_callee.addArg(b.fmt("{d}", .{seed}));
+        run_gen_callee.addArg(b.fmt("{d}", .{depth}));
+        run_gen_callee.addArg("callee");
+        addArgs(run_gen_callee, b, arg_list_head);
+
+        addObject(exe, callee_toolchain, b, "callee.o", run_gen_callee, target, callee_mode);
+    }
+
+    const run = b.addRunArtifact(exe);
+
+    b.default_step.dependOn(&run.step);
+}
+
+fn addArgs(
+    exe: *std.Build.Step.Run,
+    b: *std.Build,
+    arg_list: *const ArgList,
+) void {
+    var item: ?*const ArgList = arg_list;
+    while (item) |cur| : (item = cur.next) {
+        exe.addArg(b.fmt("{d}", .{@intFromEnum(cur.data.*)}));
+    }
+}
 
 fn addObject(exe: *std.Build.Step.Compile, toolchain: Toolchain, b: *std.Build, name: []const u8, run_gen: *std.Build.Step.Run, target: std.Build.ResolvedTarget, mode: std.builtin.OptimizeMode) void {
     switch (toolchain.lang) {
