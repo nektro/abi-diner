@@ -81,6 +81,13 @@ pub fn main() !void {
     }
 }
 
+pub fn supportsTag(tag: Tag) bool {
+    return switch (tag) {
+        .f128 => false, // type doesnt exist
+        else => true,
+    };
+}
+
 pub fn renderType(self: Tag, writer: BufWriter) !void {
     try writer.writeAll(switch (self) {
         .i8 => "int8_t",

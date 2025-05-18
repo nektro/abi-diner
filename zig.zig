@@ -58,6 +58,12 @@ pub fn main() !void {
     }
 }
 
+pub fn supportsTag(tag: Tag) bool {
+    return switch (tag) {
+        else => true,
+    };
+}
+
 pub fn renderType(self: Tag, writer: BufWriter) !void {
     try writer.writeAll(switch (self) {
         .i8 => "i8",

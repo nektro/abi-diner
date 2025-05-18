@@ -28,6 +28,7 @@ pub fn build(b: *std.Build) void {
             .optimize = .ReleaseSafe,
         }),
         .basename = "stdout.zig",
+        .supportsTag = @import("./zig.zig").supportsTag,
     };
     _ = &toolchain_zig;
 
@@ -40,6 +41,7 @@ pub fn build(b: *std.Build) void {
             .optimize = .ReleaseSafe,
         }),
         .basename = "stdout.c",
+        .supportsTag = @import("./c.zig").supportsTag,
     };
     _ = &toolchain_c;
 
@@ -52,6 +54,7 @@ pub fn build(b: *std.Build) void {
             .optimize = .ReleaseSafe,
         }),
         .basename = "stdout.cpp",
+        .supportsTag = @import("./cpp.zig").supportsTag,
     };
     _ = &toolchain_cpp;
 
@@ -64,6 +67,7 @@ pub fn build(b: *std.Build) void {
             .optimize = .ReleaseSafe,
         }),
         .basename = "stdout.rs",
+        .supportsTag = @import("./rust.zig").supportsTag,
     };
     _ = &toolchain_rust;
 
@@ -114,10 +118,8 @@ pub fn build(b: *std.Build) void {
                     _ = &is_rust;
 
                     for (std.enums.values(Tag)) |i| {
-                        if (is_c and i == .f128) continue;
-                        if (is_cpp and i == .f128) continue;
-                        if (is_rust and i == .f16) continue; // nightly only
-                        if (is_rust and i == .f128) continue; // nightly only
+                        if (!caller_toolchain.supportsTag(i)) continue;
+                        if (!callee_toolchain.supportsTag(i)) continue;
                         if ((is_c and is_zig) and (i == .u128 or i == .i128)) continue;
                         if ((is_c and is_cpp) and (i == .u128 or i == .i128)) continue;
                         if ((is_c and is_rust) and (i == .u128 or i == .i128)) continue;
@@ -163,6 +165,7 @@ const Toolchain = struct {
     lang: Lang,
     gen: *std.Build.Step.Compile,
     basename: []const u8,
+    supportsTag: *const fn (Tag) bool,
 
     const Lang = enum {
         zig,
