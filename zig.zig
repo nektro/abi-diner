@@ -8,6 +8,10 @@ pub fn main() !void {
     var args = std.process.args();
     defer std.debug.assert(args.next() == null);
 
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer std.debug.assert(gpa.deinit() == .ok);
+    const allocator = gpa.allocator();
+
     const argv0 = args.next().?;
     _ = argv0;
 
@@ -16,29 +20,39 @@ pub fn main() !void {
     const random = rand.random();
 
     const count = try std.fmt.parseInt(u8, args.next().?, 10);
-    std.debug.assert(count == 1);
 
     switch (std.meta.stringToEnum(enum { caller, callee }, args.next().?).?) {
         .caller => {
-            const tag: Tag = @enumFromInt(try std.fmt.parseInt(u8, args.next().?, 10));
+            var tags: std.ArrayList(Tag) = try .initCapacity(allocator, count);
+            defer tags.deinit();
+            for (0..count) |_| tags.appendAssumeCapacity(@enumFromInt(try std.fmt.parseInt(u8, args.next().?, 10)));
 
             const stdout = std.io.getStdOut();
             var bw = std.io.bufferedWriter(stdout.writer());
             const writer = bw.writer();
 
-            try writer.writeAll("extern fn do_test(a0: ");
-            try renderType(tag, writer);
+            try writer.writeAll("extern fn do_test(");
+            for (0..count) |n| {
+                if (n > 0) try writer.writeAll(", ");
+                try writer.print("a{d}: ", .{n});
+                try renderType(tags.items[n], writer);
+            }
             try writer.writeAll(") void;\n");
             try writer.writeAll("export fn do_caller() void {\n");
             try writer.writeAll("    do_test(");
-            try renderValue(tag, writer, random);
+            for (0..count) |n| {
+                if (n > 0) try writer.writeAll(", ");
+                try renderValue(tags.items[n], writer, random);
+            }
             try writer.writeAll(");\n");
             try writer.writeAll("}\n");
             try bw.flush();
         },
 
         .callee => {
-            const tag: Tag = @enumFromInt(try std.fmt.parseInt(u8, args.next().?, 10));
+            var tags: std.ArrayList(Tag) = try .initCapacity(allocator, count);
+            defer tags.deinit();
+            for (0..count) |_| tags.appendAssumeCapacity(@enumFromInt(try std.fmt.parseInt(u8, args.next().?, 10)));
 
             const stdout = std.io.getStdOut();
             var bw = std.io.bufferedWriter(stdout.writer());
@@ -46,12 +60,17 @@ pub fn main() !void {
 
             try writer.writeAll("extern fn do_panic() void;\n");
             try writer.writeAll("export fn do_test(");
-            try writer.writeAll("a0: ");
-            try renderType(tag, writer);
+            for (0..count) |n| {
+                if (n > 0) try writer.writeAll(", ");
+                try writer.print("a{d}: ", .{n});
+                try renderType(tags.items[n], writer);
+            }
             try writer.writeAll(") void {\n");
-            try writer.writeAll("    if (a0 != ");
-            try renderValue(tag, writer, random);
-            try writer.writeAll(") do_panic();\n");
+            for (0..count) |n| {
+                try writer.print("    if (a{d} != ", .{n});
+                try renderValue(tags.items[n], writer, random);
+                try writer.writeAll(") do_panic();\n");
+            }
             try writer.writeAll("}\n");
             try bw.flush();
         },
