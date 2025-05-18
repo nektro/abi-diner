@@ -9,15 +9,15 @@ pub fn main() !void {
     const argv0 = args.next().?;
     _ = argv0;
 
+    const seed = try std.fmt.parseInt(u64, args.next().?, 10);
+    var rand = std.Random.DefaultPrng.init(seed);
+    const random = rand.random();
+
+    const count = try std.fmt.parseInt(u8, args.next().?, 10);
+    std.debug.assert(count == 1);
+
     switch (std.meta.stringToEnum(enum { caller, callee }, args.next().?).?) {
         .caller => {
-            const seed = try std.fmt.parseInt(u64, args.next().?, 10);
-            var rand = std.Random.DefaultPrng.init(seed);
-            const random = rand.random();
-
-            const count = try std.fmt.parseInt(u8, args.next().?, 10);
-            std.debug.assert(count == 1);
-
             const tag: Tag = @enumFromInt(try std.fmt.parseInt(u8, args.next().?, 10));
 
             const stdout = std.io.getStdOut();
@@ -46,13 +46,6 @@ pub fn main() !void {
         },
 
         .callee => {
-            const seed = try std.fmt.parseInt(u64, args.next().?, 10);
-            var rand = std.Random.DefaultPrng.init(seed);
-            const random = rand.random();
-
-            const count = try std.fmt.parseInt(u8, args.next().?, 10);
-            std.debug.assert(count == 1);
-
             const tag: Tag = @enumFromInt(try std.fmt.parseInt(u8, args.next().?, 10));
 
             const stdout = std.io.getStdOut();
