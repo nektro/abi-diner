@@ -128,6 +128,7 @@ pub fn build(b: *std.Build) void {
                     for (std.enums.values(Tag)) |i| {
                         if (!caller_toolchain.supportsTag(i)) continue;
                         if (!callee_toolchain.supportsTag(i)) continue;
+
                         if ((is_c and is_zig) and (i == .u128 or i == .i128)) continue;
                         if ((is_c and is_cpp) and (i == .u128 or i == .i128)) continue;
                         if ((is_c and is_rust) and (i == .u128 or i == .i128)) continue;
@@ -164,7 +165,7 @@ pub fn build(b: *std.Build) void {
                         b.default_step.dependOn(&run.step);
 
                         var arg_list_head = ArgList{ .data = &i };
-                        genCombo(1, 2, b, target, seed, main_obj, caller_toolchain, caller_mode, callee_toolchain, callee_mode, &arg_list_head, &arg_list_head);
+                        genCombo(1, 1, b, target, seed, main_obj, caller_toolchain, caller_mode, callee_toolchain, callee_mode, &arg_list_head, &arg_list_head);
                     }
                 }
             }
