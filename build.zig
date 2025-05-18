@@ -76,7 +76,6 @@ pub fn build(b: *std.Build) void {
     if (cCpp) toolchains.appendAssumeCapacity(toolchain_cpp);
     if (cRust) toolchains.appendAssumeCapacity(toolchain_rust);
     if (cAll) toolchains.appendSliceAssumeCapacity(&toolchains_all);
-    if (toolchains.len == 0) toolchains.appendSliceAssumeCapacity(&.{ toolchain_zig, toolchain_c });
 
     var modes = std.BoundedArray(std.builtin.OptimizeMode, 4){};
     if (oDebug) modes.appendAssumeCapacity(.Debug);
@@ -84,7 +83,6 @@ pub fn build(b: *std.Build) void {
     if (oReleaseFast) modes.appendAssumeCapacity(.ReleaseFast);
     if (oReleaseSmall) modes.appendAssumeCapacity(.ReleaseSmall);
     if (oAll) modes.appendSliceAssumeCapacity(std.enums.values(std.builtin.OptimizeMode));
-    if (modes.len == 0) modes.appendSliceAssumeCapacity(&.{.Debug});
 
     std.log.warn("seed: {d}", .{seed});
     // 1747392854175661 crashes f32 @ 2144301497
