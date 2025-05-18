@@ -1,6 +1,8 @@
 const std = @import("std");
 const shared = @import("./shared.zig");
 const Tag = shared.Tag;
+const FileWriter = std.fs.File.Writer;
+const BufWriter = std.io.BufferedWriter(4096, FileWriter).Writer;
 
 pub fn main() !void {
     var args = std.process.args();
@@ -21,7 +23,8 @@ pub fn main() !void {
             const tag: Tag = @enumFromInt(try std.fmt.parseInt(u8, args.next().?, 10));
 
             const stdout = std.io.getStdOut();
-            const writer = stdout.writer();
+            var bw = std.io.bufferedWriter(stdout.writer());
+            const writer = bw.writer();
 
             try writer.writeAll("#![no_main]\n");
             try writer.writeAll("#![allow(improper_ctypes)]\n");
@@ -38,13 +41,15 @@ pub fn main() !void {
             try renderValue(tag, writer, random);
             try writer.writeAll("); }\n");
             try writer.writeAll("}\n");
+            try bw.flush();
         },
 
         .callee => {
             const tag: Tag = @enumFromInt(try std.fmt.parseInt(u8, args.next().?, 10));
 
             const stdout = std.io.getStdOut();
-            const writer = stdout.writer();
+            var bw = std.io.bufferedWriter(stdout.writer());
+            const writer = bw.writer();
 
             try writer.writeAll("#![no_main]\n");
             try writer.writeAll("#![allow(unused_parens)]\n");
@@ -62,11 +67,12 @@ pub fn main() !void {
             try renderValue(tag, writer, random);
             try writer.writeAll(")) { do_panic(); } }\n");
             try writer.writeAll("}\n");
+            try bw.flush();
         },
     }
 }
 
-pub fn renderType(self: Tag, writer: std.fs.File.Writer) !void {
+pub fn renderType(self: Tag, writer: BufWriter) !void {
     try writer.writeAll(switch (self) {
         .i8 => "i8",
         .i16 => "i16",
@@ -87,7 +93,7 @@ pub fn renderType(self: Tag, writer: std.fs.File.Writer) !void {
     });
 }
 
-pub fn renderValue(self: Tag, writer: std.fs.File.Writer, random: std.Random) !void {
+pub fn renderValue(self: Tag, writer: BufWriter, random: std.Random) !void {
     switch (self) {
         .i8 => try writer.print("std::mem::transmute::<u8, i8>({d}u8)", .{random.int(u8)}),
         .i16 => try writer.print("std::mem::transmute::<u16, i16>({d}u16)", .{random.int(u16)}),
