@@ -7,6 +7,11 @@ pub fn build(b: *std.Build) void {
     const random = b.option(bool, "random", "") orelse false;
     const seed = if (random) std.crypto.random.int(u64) else b.option(u64, "seed", "") orelse 10335101430366274186;
 
+    const cZig = b.option(bool, "cZig", "") orelse false;
+    const cC = b.option(bool, "cC", "") orelse false;
+    const cCpp = b.option(bool, "cCpp", "") orelse false;
+    const cRust = b.option(bool, "cRust", "") orelse false;
+
     const toolchain_zig: Toolchain = .{
         .lang = .zig,
         .gen = b.addExecutable(.{
@@ -51,20 +56,27 @@ pub fn build(b: *std.Build) void {
     };
     _ = &toolchain_rust;
 
-    const toolchains: []const Toolchain = &.{
+    const toolchains_all = [_]Toolchain{
         toolchain_zig,
         toolchain_c,
         toolchain_cpp,
         toolchain_rust,
     };
 
+    var toolchains = std.BoundedArray(Toolchain, toolchains_all.len){};
+    if (cZig) toolchains.appendAssumeCapacity(toolchain_zig);
+    if (cC) toolchains.appendAssumeCapacity(toolchain_c);
+    if (cCpp) toolchains.appendAssumeCapacity(toolchain_cpp);
+    if (cRust) toolchains.appendAssumeCapacity(toolchain_rust);
+    if (toolchains.len == 0) toolchains.appendSliceAssumeCapacity(&toolchains_all);
+
     std.log.warn("seed: {d}", .{seed});
     // 1747392854175661 crashes f32 @ 2144301497
     // 1747435010791578 crashes f16 @ 64776 (NaN)
 
-    for (toolchains) |caller_toolchain| {
+    for (toolchains.slice()) |caller_toolchain| {
         for (std.enums.values(std.builtin.OptimizeMode)[0..1]) |caller_mode| {
-            for (toolchains) |callee_toolchain| {
+            for (toolchains.slice()) |callee_toolchain| {
                 for (std.enums.values(std.builtin.OptimizeMode)[0..1]) |callee_mode| {
                     for (std.enums.values(Tag)) |i| {
                         const is_zig = caller_toolchain.lang == .zig or callee_toolchain.lang == .zig;
