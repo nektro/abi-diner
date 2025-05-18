@@ -12,6 +12,11 @@ pub fn build(b: *std.Build) void {
     const cCpp = b.option(bool, "cCpp", "") orelse false;
     const cRust = b.option(bool, "cRust", "") orelse false;
 
+    const oDebug = b.option(bool, "oDebug", "") orelse false;
+    const oReleaseSafe = b.option(bool, "oReleaseSafe", "") orelse false;
+    const oReleaseFast = b.option(bool, "oReleaseFast", "") orelse false;
+    const oReleaseSmall = b.option(bool, "oReleaseSmall", "") orelse false;
+
     const toolchain_zig: Toolchain = .{
         .lang = .zig,
         .gen = b.addExecutable(.{
@@ -70,14 +75,21 @@ pub fn build(b: *std.Build) void {
     if (cRust) toolchains.appendAssumeCapacity(toolchain_rust);
     if (toolchains.len == 0) toolchains.appendSliceAssumeCapacity(&toolchains_all);
 
+    var modes = std.BoundedArray(std.builtin.OptimizeMode, 4){};
+    if (oDebug) modes.appendAssumeCapacity(.Debug);
+    if (oReleaseSafe) modes.appendAssumeCapacity(.ReleaseSafe);
+    if (oReleaseFast) modes.appendAssumeCapacity(.ReleaseFast);
+    if (oReleaseSmall) modes.appendAssumeCapacity(.ReleaseSmall);
+    if (modes.len == 0) modes.appendSliceAssumeCapacity(std.enums.values(std.builtin.OptimizeMode));
+
     std.log.warn("seed: {d}", .{seed});
     // 1747392854175661 crashes f32 @ 2144301497
     // 1747435010791578 crashes f16 @ 64776 (NaN)
 
     for (toolchains.slice()) |caller_toolchain| {
-        for (std.enums.values(std.builtin.OptimizeMode)[0..1]) |caller_mode| {
+        for (modes.slice()) |caller_mode| {
             for (toolchains.slice()) |callee_toolchain| {
-                for (std.enums.values(std.builtin.OptimizeMode)[0..1]) |callee_mode| {
+                for (modes.slice()) |callee_mode| {
                     for (std.enums.values(Tag)) |i| {
                         const is_zig = caller_toolchain.lang == .zig or callee_toolchain.lang == .zig;
                         _ = &is_zig;
