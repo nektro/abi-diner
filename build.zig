@@ -25,6 +25,7 @@ pub fn build(b: *std.Build) void {
             .name = "gen_zig",
             .root_source_file = b.path("./zig.zig"),
             .target = target,
+            .optimize = .ReleaseSafe,
         }),
         .basename = "stdout.zig",
     };
@@ -36,6 +37,7 @@ pub fn build(b: *std.Build) void {
             .name = "gen_c",
             .root_source_file = b.path("./c.zig"),
             .target = target,
+            .optimize = .ReleaseSafe,
         }),
         .basename = "stdout.c",
     };
@@ -47,6 +49,7 @@ pub fn build(b: *std.Build) void {
             .name = "gen_cpp",
             .root_source_file = b.path("./cpp.zig"),
             .target = target,
+            .optimize = .ReleaseSafe,
         }),
         .basename = "stdout.cpp",
     };
@@ -58,6 +61,7 @@ pub fn build(b: *std.Build) void {
             .name = "gen_rust",
             .root_source_file = b.path("./rust.zig"),
             .target = target,
+            .optimize = .ReleaseSafe,
         }),
         .basename = "stdout.rs",
     };
