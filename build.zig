@@ -39,10 +39,22 @@ pub fn build(b: *std.Build) void {
     };
     _ = &toolchain_cpp;
 
+    const toolchain_rust: Toolchain = .{
+        .lang = .rust,
+        .gen = b.addExecutable(.{
+            .name = "gen_rust",
+            .root_source_file = b.path("./rust.zig"),
+            .target = target,
+        }),
+        .basename = "stdout.rs",
+    };
+    _ = &toolchain_rust;
+
     const toolchains: []const Toolchain = &.{
         toolchain_zig,
         toolchain_c,
         toolchain_cpp,
+        toolchain_rust,
     };
 
     std.log.warn("seed: {d}", .{seed});
@@ -60,9 +72,15 @@ pub fn build(b: *std.Build) void {
                         _ = &is_c;
                         const is_cpp = caller_toolchain.lang == .cpp or callee_toolchain.lang == .cpp;
                         _ = &is_cpp;
+                        const is_rust = caller_toolchain.lang == .rust or callee_toolchain.lang == .rust;
+                        _ = &is_rust;
 
                         if (is_c and i == .f128) continue;
                         if (is_cpp and i == .f128) continue;
+                        if (is_rust and i == .f16) continue; // nightly only
+                        if (is_rust and i == .f128) continue; // nightly only
+                        if (is_rust and i == .u128) continue; // warning: `extern` block uses type `u128`, which is not FFI-safe
+                        if (is_rust and i == .i128) continue; // warning: `extern` block uses type `i128`, which is not FFI-safe
                         if ((is_c and is_zig) and (i == .u128 or i == .i128)) continue;
                         if ((is_c and is_cpp) and (i == .u128 or i == .i128)) continue;
 
@@ -109,6 +127,7 @@ const Toolchain = struct {
         zig,
         c,
         cpp,
+        rust,
     };
 };
 
@@ -149,6 +168,17 @@ fn addObject(exe: *std.Build.Step.Compile, toolchain: Toolchain, b: *std.Build, 
             obj.linkLibCpp();
             run_gen.captured_stdout.?.basename = toolchain.basename;
             exe.addObject(obj);
+        },
+        .rust => {
+            const cmd = b.addSystemCommand(&.{"rustc"});
+            cmd.addArgs(&.{ "--emit", "obj" });
+            cmd.addArg("-lc");
+            cmd.addArg("-g");
+            cmd.addArg("-o");
+            const output = cmd.addOutputFileArg(name);
+            cmd.addFileArg(run_gen.captureStdOut());
+            run_gen.captured_stdout.?.basename = toolchain.basename;
+            exe.addObjectFile(output);
         },
     }
 }
