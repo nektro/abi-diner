@@ -104,16 +104,16 @@ pub fn build(b: *std.Build) void {
         for (modes.slice()) |caller_mode| {
             for (toolchains.slice()) |callee_toolchain| {
                 for (modes.slice()) |callee_mode| {
-                    for (std.enums.values(Tag)) |i| {
-                        const is_zig = caller_toolchain.lang == .zig or callee_toolchain.lang == .zig;
-                        _ = &is_zig;
-                        const is_c = caller_toolchain.lang == .c or callee_toolchain.lang == .c;
-                        _ = &is_c;
-                        const is_cpp = caller_toolchain.lang == .cpp or callee_toolchain.lang == .cpp;
-                        _ = &is_cpp;
-                        const is_rust = caller_toolchain.lang == .rust or callee_toolchain.lang == .rust;
-                        _ = &is_rust;
+                    const is_zig = caller_toolchain.lang == .zig or callee_toolchain.lang == .zig;
+                    _ = &is_zig;
+                    const is_c = caller_toolchain.lang == .c or callee_toolchain.lang == .c;
+                    _ = &is_c;
+                    const is_cpp = caller_toolchain.lang == .cpp or callee_toolchain.lang == .cpp;
+                    _ = &is_cpp;
+                    const is_rust = caller_toolchain.lang == .rust or callee_toolchain.lang == .rust;
+                    _ = &is_rust;
 
+                    for (std.enums.values(Tag)) |i| {
                         if (is_c and i == .f128) continue;
                         if (is_cpp and i == .f128) continue;
                         if (is_rust and i == .f16) continue; // nightly only
