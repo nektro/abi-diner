@@ -133,38 +133,8 @@ pub fn build(b: *std.Build) void {
                         if ((is_c and is_cpp) and (i == .u128 or i == .i128)) continue;
                         if ((is_c and is_rust) and (i == .u128 or i == .i128)) continue;
 
-                        const exe = b.addExecutable(.{
-                            .name = b.fmt("test__{s}_{s}__{s}_{s}", .{ @tagName(caller_toolchain.lang), @tagName(caller_mode), @tagName(callee_toolchain.lang), @tagName(callee_mode) }),
-                            .root_source_file = null,
-                            .target = target,
-                        });
-                        exe.addObject(main_obj);
-
-                        {
-                            const run_gen_caller = b.addRunArtifact(caller_toolchain.gen);
-                            run_gen_caller.addArg(b.fmt("{d}", .{seed}));
-                            run_gen_caller.addArg("1");
-                            run_gen_caller.addArg("caller");
-                            run_gen_caller.addArg(b.fmt("{d}", .{@intFromEnum(i)}));
-
-                            addObject(exe, caller_toolchain, b, "caller.o", run_gen_caller, target, caller_mode);
-                        }
-
-                        {
-                            const run_gen_callee = b.addRunArtifact(callee_toolchain.gen);
-                            run_gen_callee.addArg(b.fmt("{d}", .{seed}));
-                            run_gen_callee.addArg("1");
-                            run_gen_callee.addArg("callee");
-                            run_gen_callee.addArg(b.fmt("{d}", .{@intFromEnum(i)}));
-
-                            addObject(exe, callee_toolchain, b, "callee.o", run_gen_callee, target, callee_mode);
-                        }
-
-                        const run = b.addRunArtifact(exe);
-
-                        b.default_step.dependOn(&run.step);
-
                         var arg_list_head = ArgList{ .data = &i };
+                        genTest(b, target, seed, main_obj, caller_toolchain, caller_mode, callee_toolchain, callee_mode, 1, &arg_list_head);
                         genCombo(1, 1, b, target, seed, main_obj, caller_toolchain, caller_mode, callee_toolchain, callee_mode, &arg_list_head, &arg_list_head);
                     }
                 }
@@ -223,7 +193,6 @@ fn genCombo(
         var arg_list_next = ArgList{ .data = &i };
         arg_list_tail.next = &arg_list_next;
         genTest(b, target, seed, main_obj, caller_toolchain, caller_mode, callee_toolchain, callee_mode, depth + 1, arg_list_head);
-
         genCombo(depth + 1, max_depth, b, target, seed, main_obj, caller_toolchain, caller_mode, callee_toolchain, callee_mode, arg_list_head, &arg_list_next);
     }
 }
